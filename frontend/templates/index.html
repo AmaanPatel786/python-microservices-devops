@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Frontend Service</title>
+  </head>
+  <body>
+    <h1>Frontend ➜ Backend ➜ PostgreSQL ➜ Logger</h1>
+    <p>Data from backend:</p>
+    <pre>{{ data | tojson(indent=2) }}</pre>
+    <p>Try POSTing a user (from terminal):</p>
+    <pre>curl -X POST http://localhost:5000/api/add_user -H "Content-Type: application/json" -d '{"name":"Amaan"}'</pre>
+    <p>Backend health: <a href="http://localhost:5000/api/health">/api/health</a></p>
+  </body>
+</html>

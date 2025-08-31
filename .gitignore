@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+*.log
+.env
+.venv/
+.DS_Store
+terraform/.terraform/
+terraform/terraform.tfstate*
