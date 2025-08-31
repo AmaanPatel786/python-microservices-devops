@@ -27,13 +27,13 @@ def init_db():
             """)
         conn.commit()
 
-@app.before_first_request
-def startup():
+with app.app_context():
     for _ in range(20):
         try:
             init_db()
             break
         except Exception:
+            time.sleep(1)
             time.sleep(1)
 
 @app.route("/api/health")
