@@ -1,39 +1,45 @@
 from flask import Flask, jsonify, request
 import os, time
-import psycopg2
+import MySQLdb
 import requests
 
 app = Flask(__name__)
 
-DB_HOST = os.getenv("DB_HOST","db")
-DB_PORT = int(os.getenv("DB_PORT","5432"))
-DB_NAME = os.getenv("DB_NAME","appdb")
-DB_USER = os.getenv("DB_USER","appuser")
-DB_PASSWORD = os.getenv("DB_PASSWORD","apppassword")
-LOGGER_URL = os.getenv("LOGGER_URL","http://logger:9000/log")
+DB_HOST = os.getenv("DB_HOST", "db")
+DB_PORT = int(os.getenv("DB_PORT", "3306"))   # ✅ MySQL default port
+DB_NAME = os.getenv("DB_NAME", "appdb")
+DB_USER = os.getenv("DB_USER", "appuser")
+DB_PASSWORD = os.getenv("DB_PASSWORD", "apppassword")
+LOGGER_URL = os.getenv("LOGGER_URL", "http://logger:9000/log")
 
 def get_conn():
-    return psycopg2.connect(host=DB_HOST, port=DB_PORT, dbname=DB_NAME, user=DB_USER, password=DB_PASSWORD)
+    return MySQLdb.connect(
+        host=DB_HOST,
+        port=DB_PORT,
+        user=DB_USER,
+        passwd=DB_PASSWORD,
+        db=DB_NAME
+    )
 
 def init_db():
     with get_conn() as conn:
         with conn.cursor() as cur:
             cur.execute("""
             CREATE TABLE IF NOT EXISTS users(
-                id SERIAL PRIMARY KEY,
-                name TEXT NOT NULL,
-                created_at TIMESTAMP DEFAULT NOW()
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                name VARCHAR(255) NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
             """)
         conn.commit()
 
+# Run DB init at startup
 with app.app_context():
     for _ in range(20):
         try:
             init_db()
             break
         except Exception:
-            time.sleep(1)
             time.sleep(1)
 
 @app.route("/api/health")
@@ -51,9 +57,9 @@ def data():
         db_ok = True
     except Exception:
         db_ok = False
-    payload = {"message":"Hello from backend","db_ok":db_ok,"user_count":count}
+    payload = {"message": "Hello from backend", "db_ok": db_ok, "user_count": count}
     try:
-        requests.post(LOGGER_URL, json={"event":"request","path":"/api/data","payload":payload}, timeout=1)
+        requests.post(LOGGER_URL, json={"event": "request", "path": "/api/data", "payload": payload}, timeout=1)
     except Exception:
         pass
     return jsonify(payload)
@@ -71,7 +77,7 @@ def add_user():
     except Exception as e:
         return jsonify(error=str(e)), 500
     try:
-        requests.post(LOGGER_URL, json={"event":"add_user","name":name}, timeout=1)
+        requests.post(LOGGER_URL, json={"event": "add_user", "name": name}, timeout=1)
     except Exception:
         pass
     return jsonify(ok=True, name=name)
